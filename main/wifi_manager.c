@@ -5,17 +5,23 @@ static const char *TAG_STATION = "wifi_station";
 
 void wifi_station_mode_example(void)
 {
+    // Initialize NVS flash (required for WiFi credentials storage)
     nvs_flash_init();
 
+    // Initialize TCP/IP stack (required for WiFi functionality)
     esp_netif_init();
 
+    // Create default event loop (required for WiFi event handling)
     esp_event_loop_create_default();
 
+    // Create default WiFi station (STA) network interface
     esp_netif_create_default_wifi_sta();
 
+    // Initialize WiFi with default configuration
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     esp_wifi_init(&cfg);
 
+    // Configure WiFi connection settings (SSID and password)
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = WIFI_SSID,
@@ -23,12 +29,16 @@ void wifi_station_mode_example(void)
         },
     };
 
+    // Set WiFi mode to station (STA)
     esp_wifi_set_mode(WIFI_MODE_STA);
 
+    // Set WiFi configuration for station interface
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
 
+    // Start WiFi interface
     esp_wifi_start();
 
+    // Connect to the configured WiFi network
     esp_wifi_connect();
 
     ESP_LOGI(TAG_STATION, "WiFi station started");
@@ -36,12 +46,13 @@ void wifi_station_mode_example(void)
 
 //wifi event example
 static const char *TAG_EVENT = "wifi_event";
-
+// WiFi event handler function
 static void wifi_event_handler(void* arg,
                                esp_event_base_t event_base,
                                int32_t event_id,
                                void* event_data)
 {
+    // Handle different WiFi events based on event base and event ID
     if(event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
     {
         ESP_LOGI(TAG_EVENT,"WiFi Started");
@@ -61,12 +72,18 @@ static void wifi_event_handler(void* arg,
 
 void wifi_event_example(void)
 {
+    // Initialize NVS flash (required for WiFi credentials storage)
     nvs_flash_init();
 
+    // Initialize TCP/IP stack (required for WiFi functionality)
     esp_netif_init();
 
+    // Create default event loop (required for WiFi event handling)
     esp_event_loop_create_default();
 
+    // Create default WiFi station (STA) network interface
+    esp_netif_create_default_wifi_sta();
+    // Initialize WiFi with default configuration
     esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();

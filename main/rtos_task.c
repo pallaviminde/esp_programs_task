@@ -10,7 +10,8 @@ static void producer_task(void *pvParameters)
 
     while (1)
     {
-        sensor_value++;
+        sensor_value++; // Simulate sensor reading (incrementing value)
+        // Send the sensor value to the queue (blocks if queue is full)
         xQueueSend(data_queue, &sensor_value, portMAX_DELAY);
         printf("Sent: %d\n", sensor_value);
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -18,12 +19,14 @@ static void producer_task(void *pvParameters)
 }
 
 // Consumer Task
+// This task receives data from the queue and processes it (e.g., prints it).
 static void consumer_task(void *pvParameters)
 {
     int received_value;
 
     while (1)
     {
+        // Wait indefinitely for data to be available in the queue and receive it
         if (xQueueReceive(data_queue, &received_value, portMAX_DELAY))
         {
             printf("Received: %d\n", received_value);
@@ -34,6 +37,7 @@ static void consumer_task(void *pvParameters)
 // Initialization function (called from app_main)
 void rtos_tasks_init(void)
 {
+    // Create a queue capable of holding 5 integers
     data_queue = xQueueCreate(5, sizeof(int));
 
     if (data_queue == NULL)
@@ -42,6 +46,7 @@ void rtos_tasks_init(void)
         return;
     }
 
+    // Create producer and consumer tasks
     xTaskCreate(producer_task, "Producer", 2048, NULL, 1, NULL);
     xTaskCreate(consumer_task, "Consumer", 2048, NULL, 1, NULL);
 }
@@ -53,6 +58,7 @@ void give_task(void*arg) //giving signal
 {
     while(1)
     {
+        // Give the semaphore to unblock the take_task
         xSemaphoreGive(xSemaphore);
         printf("Semaphore Given\n");
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -63,6 +69,7 @@ void take_task(void*arg) // taking signal
 {
     while(1)
     {
+        // Wait indefinitely for the semaphore to be given by give_task
         if(xSemaphoreTake(xSemaphore, portMAX_DELAY))
         {
             printf("Semaphore Taken\n");
@@ -134,13 +141,16 @@ void mutex_task1(void *arg)
 {
     while (1)
     {
+        // Take the mutex before accessing the shared counter
         if (xSemaphoreTake(counterMutex, portMAX_DELAY))
         {
+            // Increment the shared counter and print its value
             shared_counter++;
             printf("Task1 Counter: %d\n", shared_counter);
             xSemaphoreGive(counterMutex);
         }
 
+        // Delay to allow other task to run and prevent starvation
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
@@ -149,8 +159,10 @@ void mutex_task2(void *arg)
 {
     while (1)
     {
+        // Take the mutex before accessing the shared counter
         if (xSemaphoreTake(counterMutex, portMAX_DELAY))
         {
+            // Increment the shared counter and print its value
             shared_counter++;
             printf("Task2 Counter: %d\n", shared_counter);
             xSemaphoreGive(counterMutex);
@@ -165,17 +177,22 @@ SemaphoreHandle_t ledMutex = NULL;  // Define the mutex
 
 void mutex_button_task(void *arg)
 {
+    // Configure GPIO for button input with pull-up
     gpio_set_direction(BUTTON_PIN, GPIO_MODE_INPUT);
     gpio_set_pull_mode(BUTTON_PIN, GPIO_PULLUP_ONLY);
 
+    // Track last button state for edge detection
     int last_state = 1;
 
     while (1)
     {
+        // Read current button state
         int current = gpio_get_level(BUTTON_PIN);
 
+        // Detect falling edge (button press)
         if (current == 0 && last_state == 1)  // Button pressed
         {
+            // Attempt to take the mutex before controlling the LED
             if (xSemaphoreTake(ledMutex, portMAX_DELAY))
             {
                 // Turn LED ON on button press
@@ -196,6 +213,7 @@ void mutex_blink_task(void *arg)
 {
     while (1)
     {
+        // Attempt to take the mutex before controlling the LED
         if (xSemaphoreTake(ledMutex, portMAX_DELAY))
         {
             // Turn LED OFF every 1 second

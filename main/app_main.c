@@ -142,7 +142,6 @@ void app_main(void)
 }
 */
 
-
 //wifi connectivity example
 void app_main(void)
 {
